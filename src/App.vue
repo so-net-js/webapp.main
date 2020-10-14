@@ -1,53 +1,35 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view />
-  </div>
+  <router-view></router-view>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import store from "@/store";
-import { ROUTES, ROUTES_PARAMS, routeResolver } from "@/router";
+import { ROUTES, routeResolver, RouteParams } from "@/router/index";
+import { AuthenticateActionType } from "./modules/auth/routes";
 
 export default Vue.extend({
   async mounted() {
-    store.state.module1.name;
-    store.dispatch.module1.loadName({ id: "Hello" });
+    const init = await store.dispatch.auth.init(); // @todo maybe create a super init in main storage
+    if (init) {
+      await store.dispatch.auth.checkJWT();
+    }
 
-    this.$router.replace(ROUTES.EXAMLPE.$); // for namespace route
-    this.$router.replace(ROUTES.EXAMLPE.R1); // for route without params
-    this.$router.replace(
-      routeResolver<ROUTES_PARAMS["EXAMPLE"]["R2_$ID"]>(ROUTES.EXAMLPE.R2_$ID, {
-        id: "10"
-      })
-    ); // for route with params;
-  }
+    if (!store.state.auth.loggedIn) {
+      this.$router.replace(
+        routeResolver<RouteParams["AUTH"]["AUTHENTICATE_$ACTION"]>(
+          ROUTES.AUTH.AUTHENTICATE_$ACTION,
+          {
+            action: AuthenticateActionType.LOGIN,
+          },
+        ),
+      );
+    }
+  },
 });
 </script>
 
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
-  }
-}
+@import "./styles/carbon";
+@import "./styles/utils";
 </style>

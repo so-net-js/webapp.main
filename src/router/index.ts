@@ -1,14 +1,14 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import {
-  routes as exampleRoutes,
-  ROUTES as exampleConsts,
-  ROUTE_PARAMS as exampleParams,
-} from "../modules/example/routes";
+  routes as authRoutes,
+  ROUTES as AUTH_ROUTES,
+  RouteParams as AuthRouteParams,
+} from "../modules/auth/routes";
 
 Vue.use(VueRouter);
 
-const routes: Array<RouteConfig> = [...exampleRoutes];
+const routes: Array<RouteConfig> = [...authRoutes];
 
 export const router = new VueRouter({
   mode: "history",
@@ -17,15 +17,15 @@ export const router = new VueRouter({
 });
 
 export const ROUTES = {
-  ...exampleConsts,
+  ...AUTH_ROUTES,
 };
 
-export type ROUTES_PARAMS = exampleParams;
+export type RouteParams = AuthRouteParams;
 
 export const routeResolver = <T>(route: string, params: T) => {
-  const res = route;
-  Object.values(params).forEach(([key, value]) => {
-    res.replace(new RegExp(`:${key}`), value);
+  let res = route;
+  Object.entries(params).forEach(([key, value]) => {
+    res = res.replace(new RegExp(`:${key}`), value);
   });
   return res;
 };
