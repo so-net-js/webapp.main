@@ -10,7 +10,7 @@ import { AuthenticateActionType } from "./modules/auth/routes";
 
 export default Vue.extend({
   async mounted() {
-    const init = await store.dispatch.auth.init(); // @todo maybe create a super init in main storage
+    const init = await store.dispatch.auth.init();
     if (init) {
       await store.dispatch.auth.checkJWT();
     }
