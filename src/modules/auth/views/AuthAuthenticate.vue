@@ -203,7 +203,7 @@ export default Vue.extend({
       await store.dispatch.auth.login({
         username: this.username,
         password: this.password,
-        errCallback: this.onErrorCallback,
+        router: this.$router,
       });
     },
     async register() {
@@ -211,7 +211,6 @@ export default Vue.extend({
         username: this.username,
         password: this.password,
         router: this.$router,
-        errCallback: this.onErrorCallback,
       });
     },
     onErrorCallback() {

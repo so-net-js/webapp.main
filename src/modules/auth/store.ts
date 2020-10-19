@@ -1,9 +1,11 @@
 import { UserServiceApi } from "@/api/user-api";
+import { RouteParams, routeResolver } from "@/router";
 import VueRouter from "vue-router";
-import { ROUTES } from "./routes";
+import { AuthenticateActionType, ROUTES } from "./routes";
 
 export interface AuthModuleState {
   username: string | null;
+  id: string | null;
   jwt: string | null;
   loggedIn: boolean;
 }
@@ -15,10 +17,14 @@ export default {
   state: {
     username: null,
     jwt: null,
+    id: null,
     loggedIn: false,
   } as AuthModuleState,
   getters: {},
   mutations: {
+    SET_ID(state: AuthModuleState, id: string) {
+      state.id = id;
+    },
     SET_USERNAME(state: AuthModuleState, username: string) {
       state.username = username;
     },
@@ -41,50 +47,72 @@ export default {
       payload: {
         username: string;
         password: string;
-        errCallback: () => void;
+        router: VueRouter;
       },
     ) {
       try {
         const res = await UserServiceApi.getUnauthorized().post<{
           username: string;
           jwt: string;
+          id: string;
         }>("/login", {
           username: payload.username,
           password: payload.password,
         });
         if (res && res.data) {
+          commit("SET_ID", res.data.id);
           commit("SET_USERNAME", res.data.username);
           commit("SET_JWT", res.data.jwt);
           commit("SET_LOGGED_IN", true);
+          localStorage.setItem(LOCAL_STORAGE_KEY_JWT, res.data.jwt);
         }
+        payload.router.replace("/"); //@todo change this to proper path;
+      } catch (e) {
         // @todo handle error
-      } catch (e) {}
+      }
     },
     async register(
-      { commit },
+      _: any,
       payload: {
         username: string;
         password: string;
         router: VueRouter;
-        errCallback: () => void;
       },
     ) {
       try {
-        const res = await UserServiceApi.getUnauthorized().post<{
-          status: boolean;
-        }>("/register", {
-          username,
-          password,
+        await UserServiceApi.getUnauthorized().post("/register", {
+          username: payload.username,
+          password: payload.password,
         });
-        if (res && res.data && res.data.status) {
-          // router.replace(ROUTES.MAIN.$); @todo uncomment this and remove code below
-          router.replace("/");
-        }
+        payload.router.replace(
+          routeResolver<RouteParams["AUTH"]["AUTHENTICATE_$ACTION"]>(
+            ROUTES.AUTH.AUTHENTICATE_$ACTION,
+            { action: AuthenticateActionType.LOGIN },
+          ),
+        );
+        // @todo throw good notification
+      } catch (e) {
         // @todo handle error
-      } catch (e) {}
+      }
     },
-    async checkJWT() {
-      //@todo make a request
+    async checkJWT({ commit, state }) {
+      console.log("ASD", state);
+      try {
+        console.log(state, state.auth.jwt);
+        const res = await UserServiceApi.getUnauthorized().post<{
+          username: string;
+          id: string;
+        }>("/login/jwt", {
+          jwt: state.auth.jwt || "",
+        });
+        if (!res) return;
+        commit("SET_USERNAME", res.data.username);
+        commit("SET_ID", res.data.id);
+        commit("SET_LOGGED_IN", true);
+      } catch (e) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY_JWT);
+        //@todo handle error
+      }
     },
   },
 };

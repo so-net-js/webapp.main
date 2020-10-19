@@ -1,5 +1,5 @@
 <template>
-  <router-view></router-view>
+  <router-view :key="$route.fullPath"></router-view>
 </template>
 
 <script lang="ts">
@@ -12,7 +12,7 @@ export default Vue.extend({
   async mounted() {
     const init = await store.dispatch.auth.init();
     if (init) {
-      await store.dispatch.auth.checkJWT();
+      await store.dispatch.auth.checkJWT({ jwt: store.state.auth.jwt });
     }
 
     if (!store.state.auth.loggedIn) {
